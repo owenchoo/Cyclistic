@@ -37,6 +37,7 @@ SET day_of_week = CASE day_of_week
                 WHEN '7' THEN 'Saturday' 
 				ELSE NULL
 				END
+
 WHERE day_of_week IN ('1', '2', '3','4','5','6','7')
 
 
@@ -51,28 +52,28 @@ SELECT
 	ROUND(a.totalmemberstrips/a.totaltrips,2)*100 AS memberspercentage,
 	ROUND(a.totalcasualstrips/a.totaltrips,2)*100 AS casualspercentage
 
-FROM ( SELECT 
-		COUNT (ride_id) AS totaltrips,
-		COUNT (CASE WHEN member_casual = 'member' THEN 1 END) AS totalmemberstrips
-		COUNT (CASE WHEN member_casual = 'casual' THEN 1 END) AS totalcasualstrips	
+FROM ( SELECT COUNT (ride_id) AS totaltrips,
+			  COUNT (CASE WHEN member_casual = 'member' THEN 1 END) AS totalmemberstrips
+			  COUNT (CASE WHEN member_casual = 'casual' THEN 1 END) AS totalcasualstrips	
+		
 		FROM cyclistic..Q1_tripdata_) a 
 
 
 -- Same thing but using CTE 
 
 WITH CTE_totaltrips AS
-( SELECT 
-	COUNT (ride_id) AS totaltrips,
-	COUNT (CASE WHEN member_casual = 'member' THEN 1 END) AS totalmemberstrips,
-	COUNT (CASE WHEN member_casual = 'casual' THEN 1 END) AS totalcasualstrips	
+( SELECT COUNT (ride_id) AS totaltrips,
+		 COUNT (CASE WHEN member_casual = 'member' THEN 1 END) AS totalmemberstrips,
+		 COUNT (CASE WHEN member_casual = 'casual' THEN 1 END) AS totalcasualstrips	
+
 FROM cyclistic..Q1_tripdata_)
 
-SELECT 
-	totaltrips,
-	totalmemberstrips,
-	totalcasualstrips,
-	totalmemberstrips/totaltrips * 100 AS memberspercentage,
-	totalcasualstrips/totaltrips * 100 AS casualspercentage
+SELECT  totaltrips,
+		totalmemberstrips,
+		totalcasualstrips,
+		totalmemberstrips/totaltrips * 100 AS memberspercentage,
+		totalcasualstrips/totaltrips * 100 AS casualspercentage
+
 FROM CTE_totaltrips
 
 
@@ -92,18 +93,18 @@ FROM cyclistic..Q1_tripdata_
 SELECT 
 	member_casual,
 	MAX(ride_duration_minutes) AS max_ride_duration
+
 FROM cyclistic..Q1_tripdata_
         
-GROUP BY 
-	member_casual
-ORDER BY 
-	max_ride_duration DESC
+GROUP BY member_casual
+
+ORDER BY max_ride_duration DESC
 
 -- Since there is skewed distribution in the data, let's looks at the median instead.
+-- median ride duration for casuals
 
-SELECT 
-	member_casual,
-	ride_duration_minutes
+SELECT  member_casual,
+		ride_duration_minutes
 
 FROM cyclistic..Q1_tripdata
 
@@ -111,9 +112,10 @@ WHERE member_casual = 'casual'
 
 ORDER BY ride_duration_minutes DESC 
 
-SELECT 
-	member_casual,
-	ride_duration_minutes
+-- median ride duration for members
+
+SELECT  member_casual,
+		ride_duration_minutes
 
 FROM cyclistic..Q1_tripdata_
 
@@ -121,38 +123,43 @@ WHERE member_casual = 'member'
 
 ORDER BY ride_duration_minutes DESC 
 
+
 -- Since there is skewed distribution in the data, let's looks at the median instead.
 
-SELECT
-        DISTINCT b.median_ride_duration,
-        member_casual
-FROM 
-        (SELECT 
-                ride_id,
-                member_casual,
-                ride_duration_minutes,
-                PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ride_duration_minutes) OVER(PARTITION BY member_casual) AS  median_ride_duration
-		FROM cyclistic..Q1_tripdata_) b 
-ORDER BY 
-        b.median_ride_duration
+SELECT DISTINCT b.median_ride_duration,
+				member_casual
 
+FROM (SELECT ride_id,
+             member_casual,
+             ride_duration_minutes,
+             PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ride_duration_minutes) OVER(PARTITION BY member_casual) AS  median_ride_duration
+		
+		FROM cyclistic..Q1_tripdata_) b 
+
+ORDER BY b.median_ride_duration
 
 
 -- looking for the mode day of week between members and casuals
 
 WITH mode_cte AS 
 
-	(SELECT DISTINCT    member_casual, 
-						day_of_week, 
-						ROW_NUMBER() OVER (PARTITION BY member_casual ORDER BY COUNT(day_of_week) DESC) rn  
+	(SELECT DISTINCT member_casual, 
+					 day_of_week, 
+					 ROW_NUMBER() OVER (PARTITION BY member_casual ORDER BY COUNT(day_of_week) DESC) rn  
+
 	FROM cyclistic..Q1_tripdata_
+
     GROUP BY member_casual, day_of_week)
 
 SELECT  member_casual,
 		day_of_week AS mode_day_of_week
+
 FROM mode_cte
+
 WHERE rn = 1
+
 ORDER BY member_casual DESC
+
 
 -- Let's look at the daily maedian ride lengths for anual members
 
@@ -168,7 +175,9 @@ WITH median_anual AS
 SELECT DISTINCT median_ride_duration,
 				member_casual,
 				day_of_week
+
 FROM median_anual
+
 ORDER BY median_ride_duration DESC
 
 
@@ -186,7 +195,9 @@ WITH median_casual AS
 SELECT DISTINCT median_ride_duration,
 				member_casual,
 				day_of_week
+
 FROM median_casual
+
 ORDER BY median_ride_duration DESC
 
  -- Let's explore at total trips of each day of week
