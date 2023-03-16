@@ -77,19 +77,19 @@ GROUP BY member_casual
 
 ORDER BY max_ride_duration DESC
 
--- Since there is skewed distribution in the data, let's looks at the median instead.
--- median ride duration for casuals
+-- let's look at the ride duration in descending order to get a sense of the data
+-- ride duration desc for casuals
 
 SELECT	member_casual,
 		ride_duration_minutes
 
-FROM cyclistic..Q1_tripdata
+FROM cyclistic..Q1_tripdata_
 
 WHERE member_casual = 'casual'
 
 ORDER BY ride_duration_minutes DESC 
 
--- median ride duration for members
+-- ride duration desc for members
 
 SELECT	member_casual,
 		ride_duration_minutes
@@ -116,7 +116,7 @@ FROM (SELECT	ride_id,
 ORDER BY b.median_ride_duration
 
 
--- looking for the mode day of week between members and casuals
+-- looking for the busiest day of the week between members and casuals
 
 WITH mode_cte AS 
 
@@ -138,7 +138,7 @@ WHERE rn = 1
 ORDER BY member_casual DESC
 
 
--- Let's look at the daily maedian ride lengths for anual members
+-- Let's look at the median ride duration of each days for anual members
 
 WITH median_anual AS 
 
@@ -158,7 +158,7 @@ FROM median_anual
 ORDER BY median_ride_duration DESC
 
 
--- Let's look at the daily maedian ride lengths for casual riders
+-- Let's look at the median ride duration of each days for casual riders
 
 WITH median_casual AS 
 
